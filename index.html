@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💨 Floppy Fart Bird - Upload Your Friend's Face!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 70%, #90EE90 100%);
+            border: 4px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #uploadScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        
+        #uploadScreen h1 {
+            color: #FFD700;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        .upload-section h3 {
+            color: #FFF;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px 20px;
+            background: #4CAF50;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .file-name {
+            color: #FFD700;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        #startButton {
+            padding: 20px 40px;
+            font-size: 24px;
+            background: #FF4500;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 69, 0, 0.4);
+        }
+        
+        #startButton:hover {
+            background: #FF6347;
+            transform: scale(1.1);
+        }
+        
+        #startButton:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 50;
+        }
+        
+        #gameOver h2 {
+            color: #FF4500;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        #gameOver p {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        #restartButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        #restartButton:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+        
+        .instructions {
+            color: #FFD700;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 480px) {
+            #gameContainer {
+                max-width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+            
+            #uploadScreen h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="score">0</div>
+        
+        <div id="uploadScreen">
+            <h1>💨 Floppy Fart Bird 💨</h1>
+            
+            <div class="upload-section">
+                <h3>📸 Upload Friend's Photo</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="faceUpload" accept="image/*">
+                    <label for="faceUpload" class="file-input-label">Choose Photo</label>
+                </div>
+                <div class="file-name" id="faceName">No file chosen</div>
+            </div>
+            
+            <div class="upload-section">
+                <h3>🎵 Upload Background Music (Optional)</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="musicUpload" accept="audio/*">
+                    <label for="musicUpload" class="file-input-label">Choose Music</label>
+                </div>
+                <div class="file-name" id="musicName">No file chosen</div>
+            </div>
+            
+            <button id="startButton" disabled>START GAME</button>
+            
+            <div class="instructions">
+                👆 Tap/Click to make the character fart and fly!<br>
+                🚫 Avoid the pipes!<br>
+                🏆 Get the highest score!
+            </div>
+        </div>
+        
+        <div id="gameOver">
+            <h2>GAME OVER!</h2>
+            <p>Score: <span id="finalScore">0</span></p>
+            <button id="restartButton">PLAY AGAIN</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const uploadScreen = document.getElementById('uploadScreen');
+        const gameOverScreen = document.getElementById('gameOver');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const faceUpload = document.getElementById('faceUpload');
+        const musicUpload = document.getElementById('musicUpload');
+        const faceName = document.getElementById('faceName');
+        const musicName = document.getElementById('musicName');
+        
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        let gameStarted = false;
+        let gameRunning = false;
+        let score = 0;
+        let faceImage = null;
+        let bgMusic = null;
+        
+        const bird = {
+            x: 80,
+            y: 250,
+            width: 50,
+            height: 50,
+            velocity: 0,
+            gravity: 0.5,
+            jump: -10,
+            rotation: 0
+        };
+        
+        let pipes = [];
+        const pipeWidth = 60;
+        const pipeGap = 180;
+        const pipeSpeed = 2;
+        let frameCount = 0;
+        
+        let fartParticles = [];
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playFartSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(30, audioContext.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+            
+            for (let i = 0; i < 10; i++) {
+                fartParticles.push({
+                    x: bird.x,
+                    y: bird.y + bird.height,
+                    vx: Math.random() * 2 - 3,
+                    vy: Math.random() * 2 + 2,
+                    size: Math.random() * 15 + 5,
+                    alpha: 1,
+                    color: `rgba(${100 + Math.random() * 100}, ${150 + Math.random() * 50}, 50, 1)`
+                });
+            }
+        }
+        
+        faceUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                faceName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        faceImage = img;
+                        startButton.disabled = false;
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        musicUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                musicName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    bgMusic = new Audio(event.target.result);
+                    bgMusic.loop = true;
+                    bgMusic.volume = 0.3;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        startButton.addEventListener('click', function() {
+            uploadScreen.style.display = 'none';
+            gameStarted = true;
+            gameRunning = true;
+            if (bgMusic) {
+                bgMusic.play().catch(e => console.log('Music play failed:', e));
+            }
+            gameLoop();
+        });
+        
+        restartButton.addEventListener('click', function() {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            gameRunning = true;
+            gameLoop();
+        });
+        
+        function resetGame() {
+            bird.y = 250;
+            bird.velocity = 0;
+            pipes = [];
+            fartParticles = [];
+            score = 0;
+            frameCount = 0;
+            scoreDisplay.textContent = score;
+        }
+        
+        canvas.addEventListener('click', function() {
+            if (gameRunning) {
+                bird.velocity = bird.jump;
+                playFartSound();
+            }
+        });
+        
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameRunning) {
+                bird.velocity = bird.jump;
+                playFartSound();
+            }
+        });
+        
+        function drawBird() {
+            ctx.save();
+            ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+            ctx.rotate(bird.rotation);
+            
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(-bird.width / 2, -bird.height / 4, bird.width, bird.height / 2);
+            
+            ctx.fillStyle = '#0000FF';
+            ctx.fillRect(-bird.width / 2, bird.height / 4, bird.width, bird.height / 4);
+            
+            if (faceImage) {
+                ctx.beginPath();
+                ctx.arc(0, -bird.height / 3, bird.width / 2.5, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(faceImage, -bird.width / 2.5, -bird.height / 3 - bird.width / 2.5, bird.width / 1.25, bird.width / 1.25);
+            } else {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(0, -bird.height / 3, bird.width / 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        function drawPipes() {
+            ctx.fillStyle = '#228B22';
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+                ctx.strokeStyle = '#1a6b1a';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.top);
+                
+                ctx.fillRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - pipe.top - pipeGap);
+                ctx.strokeRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - pipe.top - pipeGap);
+                
+                ctx.fillStyle = '#2d8b2d';
+                ctx.fillRect(pipe.x - 5, pipe.top - 20, pipeWidth + 10, 20);
+                ctx.fillRect(pipe.x - 5, pipe.top + pipeGap, pipeWidth + 10, 20);
+            });
+        }
+        
+        function drawFartParticles() {
+            fartParticles.forEach((particle, index) => {
+                ctx.globalAlpha = particle.alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.alpha -= 0.02;
+                particle.size *= 0.95;
+                
+                if (particle.alpha <= 0) {
+                    fartParticles.splice(index, 1);
+                }
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        function update() {
+            if (!gameRunning) return;
+            
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+            bird.rotation = Math.min(Math.max(bird.velocity * 0.05, -0.5), 0.5);
+            
+            frameCount++;
+            if (frameCount % 90 === 0) {
+                const topHeight = Math.random() * (canvas.height - pipeGap - 100) + 50;
+                pipes.push({
+                    x: canvas.width,
+                    top: topHeight,
+                    scored: false
+                });
+            }
+            
+            pipes.forEach((pipe, index) => {
+                pipe.x -= pipeSpeed;
+                
+                if (!pipe.scored && pipe.x + pipeWidth < bird.x) {
+                    pipe.scored = true;
+                    score++;
+                    scoreDisplay.textContent = score;
+                }
+                
+                if (pipe.x + pipeWidth < 0) {
+                    pipes.splice(index, 1);
+                }
+                
+                if (
+                    bird.x + bird.width > pipe.x &&
+                    bird.x < pipe.x + pipeWidth &&
+                    (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap)
+                ) {
+                    gameOver();
+                }
+            });
+            
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                gameOver();
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(100, 80, 30, 0, Math.PI * 2);
+            ctx.arc(130, 80, 40, 0, Math.PI * 2);
+            ctx.arc(160, 80, 30, 0, Math.PI * 2);
+            ctx.fill();
+            
+            drawPipes();
+            drawFartParticles();
+            drawBird();
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+            if (bgMusic) {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            }
+        }
+    </script>
+</body>
+</html>
